@@ -24,7 +24,9 @@ class Agent(object):
         configs["core"]["callbacks"] = []
         self.configs = configs["core"]
         self.logger = logger.initialize_logger()
+        self.mqtt_logger = logger.initialize_mqtt_logger()
         self.configs["logger"] = self.logger
+        self.configs["mqtt-logger"] = self.mqtt_logger
 
         bulk.check_bulk_deployment(self.configs)
 
