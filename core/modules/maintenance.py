@@ -1,19 +1,29 @@
 import os
 import json
+import datetime
 
-def send_status(token, client, status): 
+def send_status(token, client, status, configs): 
+    topic = f"device/{token}/hive"
+    message = json.dumps({
+        "type": "update_status",
+        "status": status
+    })
+    configs["mqtt-logger"].debug({
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                "type": "PUBLISH", 
+                "topic": topic, 
+                "message": message})
     client.publish(
-        f"device/{token}/hive", 
-        json.dumps({
-            "type": "update_status",
-            "status": status
-        })
+        topic, 
+        message
     )
+    
+    
 
-def update_service(service, beta_enabled, logger, mqtt_client, token):
+def update_service(service, beta_enabled, logger, mqtt_client, token, configs):
     logger.info(f"[MAINTENANCE] Updating {service} service")
 
-    send_status(token, mqtt_client, f"download_{service}")
+    send_status(token, mqtt_client, f"download_{service}", configs)
 
     commands = [
         f"cd /opt/sixfab/core/{service}",
@@ -30,7 +40,7 @@ def update_service(service, beta_enabled, logger, mqtt_client, token):
     logger.info(f"[MAINTENANCE] Updated {service} source")
 
     logger.info(f"[MAINTENANCE] Restarting {service} service")
-    send_status(token, mqtt_client, f"restart_{service}")
+    send_status(token, mqtt_client, f"restart_{service}", configs)
 
     os.system(f"sudo systemctl restart core_{service}")
 
@@ -50,14 +60,14 @@ def main(data, configs, mqtt_client):
         return # nothing to do :(
 
     if "manager" in services_to_update:
-        update_service("manager", beta_enabled, logger, mqtt_client, configs["token"])
+        update_service("manager", beta_enabled, logger, mqtt_client, configs["token"], configs)
 
     elif "manager" in services_to_restart:
         logger.info("[MAINTENANCE] Restarting manager service")
         restart_service("core_manager")
 
     if "agent" in services_to_update:
-        update_service("agent", beta_enabled, logger, mqtt_client, configs["token"])
+        update_service("agent", beta_enabled, logger, mqtt_client, configs["token"], configs)
 
     elif "agent" in services_to_restart:
         logger.info("[MAINTENANCE] Restarting agent service")

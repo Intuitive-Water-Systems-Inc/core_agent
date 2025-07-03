@@ -2,6 +2,7 @@ import os
 import time
 import json
 from uuid import uuid4
+import datetime
 
 from core.__version__ import version
 from core.shared import config_request_cache
@@ -42,15 +43,23 @@ def _check_configuration_requests(mqtt_client, configs):
 
         logger.info(f"[CONFIGURATOR] Sending status update to cloud, status=received, request_id={request_id}")
 
+        topic = f"device/{configs['token']}/hive"
+        message = json.dumps({
+            "type": "config",
+            "data": {
+                "id": request_id,
+                "status": "received"
+            }
+        })
+        configs["mqtt-logger"].debug({
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                "type": "PUBLISH", 
+                "topic": topic, 
+                "message": message})
+        
         mqtt_client.publish(
-            f"device/{configs['token']}/hive",
-            json.dumps({
-                "type": "config",
-                "data": {
-                    "id": request_id,
-                    "status": "received"
-                }
-            })
+            topic, 
+            message
         )
 
 
@@ -111,6 +120,12 @@ def check_file_and_update_cloud(
                 data=data_to_send,
                 mid=mid
             )
+
+            configs["mqtt-logger"].debug({
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                "type": "PUBLISH", 
+                "topic": mqtt_channel, 
+                "message": message_body})
 
             message_response = mqtt_client.publish(
                 mqtt_channel,

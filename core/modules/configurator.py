@@ -2,6 +2,7 @@ import os
 from time import time
 import json
 import yaml
+import datetime
 
 from core.shared import config_request_cache
 from core.helpers.yamlio import(
@@ -50,17 +51,25 @@ def create_configuration_request(data, mqtt_client, configs):
                 Dumper=Dumper,
             )
         )
-
+    
+    topic = f"device/{configs['token']}/hive"
+    message = json.dumps({
+        "type": "config",
+        "data": {
+            "id": request_id,
+            "status": "sent"
+        }
+    })
+    configs["mqtt-logger"].debug({
+        "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+        "type": "PUBLISH", 
+        "topic": topic, 
+        "message": message})
     mqtt_client.publish(
-        f"device/{configs['token']}/hive", 
-        json.dumps({
-            "type": "config",
-            "data": {
-                "id": request_id,
-                "status": "sent"
-            }
-        })
+        topic, 
+        message
     )
+    
 
 
     logger.info(

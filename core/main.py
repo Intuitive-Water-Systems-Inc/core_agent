@@ -1,6 +1,7 @@
 import json
 import time
 import paho.mqtt.client as mqtt
+import datetime
 
 from uuid import uuid4
 from threading import Thread, Lock
@@ -81,6 +82,11 @@ class Agent(object):
 
     def publish_message(self, topic, message, qos=2, retain=True):
         try:
+            self.configs["mqtt-logger"].debug({
+                "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+                "type": "PUBLISH", 
+                "topic": topic, 
+                "message": json.dumps(message)})
             response = self.client.publish(
                 topic,
                 json.dumps(message),
@@ -111,6 +117,12 @@ class Agent(object):
 
         topic = msg.topic.split("/")[-1]
         payload = msg.payload.decode()
+
+        self.configs["mqtt-logger"].debug({
+            "date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+            "type": "SUBSCRIBE", 
+            "topic": topic, 
+            "message": json.dumps(payload)})
 
         is_connection_status_message = topic == "connected"
         is_signaling_message = msg.topic.startswith("signaling")

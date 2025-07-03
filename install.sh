@@ -28,8 +28,8 @@ cat <<"EOF"
 =====================================================
 EOF
 
-AGENT_REPOSITORY="https://github.com/sixfab/core_agent.git"
-MANAGER_REPOSITORY="https://github.com/sixfab/core_manager.git"
+AGENT_REPOSITORY="github.com/Intuitive-Water-Systems-Inc/core_agent.git"
+MANAGER_REPOSITORY="github.com/Intuitive-Water-Systems-Inc/core_manager.git"
 
 VERBOSE_SUFFIX="/dev/null"
 OS_DISTRO="Raspbian"
